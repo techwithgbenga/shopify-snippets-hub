@@ -1,0 +1,180 @@
+{% style %}
+  #shopify-section-{{section.id}} {
+    background-color: {{ section.settings.background_color }};
+  }
+
+  #shopify-section-{{section.id}} .blogposts--container .home-section--title {
+    color: {{ section.settings.heading_color }};
+    }
+
+  #shopify-section-{{section.id}} .blogposts--container {
+    padding-top: {{ section.settings.section_spacing_mobile }}px;
+    padding-bottom: {{ section.settings.section_spacing_mobile }}px;
+  }
+
+  @media screen and (min-width: 720px) {
+    #shopify-section-{{section.id}} .blogposts--container {
+      padding-top: {{ section.settings.section_spacing_desktop }}px;
+      padding-bottom: {{ section.settings.section_spacing_desktop }}px;
+    }
+  }
+
+  #shopify-section-{{section.id}} .blogposts--container .home-section--subheading,
+  #shopify-section-{{section.id}} .blogposts--container .home-section--subheading a {
+    color: {{ section.settings.subheading_color }};
+  }
+{% endstyle %}
+
+{% assign related_articles_handles = "" %}
+{% for handle in article.metafields.custom.related_articles.value %}
+  {% assign related_articles_handles = related_articles_handles | append: handle | append: "," %}
+{% endfor %}
+{% assign related_articles_handles = related_articles_handles | remove_last: "," %}
+
+{% if related_articles_handles != blank %}
+  
+<script
+  type="application/json"
+  data-section-id="{{ section.id }}"
+  data-section-type="dynamic-blog-posts">
+</script>
+
+<section class="blogposts--container blogposts--count-{{ article_count }}">
+  {% if section.settings.title != blank or section.settings.subheading != blank %}
+    <div class="home-section--title-container" >
+    {% if section.settings.title != blank %}
+      <h2 class="home-section--title">
+        {{ section.settings.title | escape }}
+      </h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <div class="home-section--subheading">
+        {{ section.settings.subheading }}
+      </div>
+    {% endif %}
+    </div>
+  {% endif %}
+
+  <ul class="home-section--content blogposts--inner" data-blog-posts>
+    {% if related_articles_handles != blank %}
+      {% assign related_handles_array = related_articles_handles | split: "," %}
+      {% assign blog = section.settings.blog %}
+      {% for handle in related_handles_array %}
+        {% capture full_handle %}{{ blog }}/{{ handle }}{% endcapture %}
+        {% for article in blogs[blog].articles %}
+          {% if article.handle == full_handle %}
+            {%
+              include 'article-excerpt',
+              article: article
+            %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+  </ul>
+</section>
+
+{% else %}
+
+<style>
+  #shopify-section-{{section.id}} {
+    display: none;
+  }
+</style>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "Related articles",
+  "class": "blogposts--section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Related Articles"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Section heading color",
+      "default": "#4D4D4D"
+    },
+    {
+      "type": "color",
+      "id": "subheading_color",
+      "label": "Section subheading color",
+      "default": "#4D4D4D"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background color"
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_desktop",
+      "label": "Desktop section spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "section_spacing_mobile",
+      "label": "Mobile section spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "blog",
+      "id": "blog",
+      "label": "Blog"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show date published",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Show post author",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_excerpt",
+      "label": "Show post excerpt",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "category": "Blog",
+      "name": "Related articles",
+      "settings": {
+        "blog": "none"
+      }
+    }
+  ],
+  "enabled_on": {
+    "templates": [
+      "article"
+    ]
+  }
+}
+
+{% endschema %}
